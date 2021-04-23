@@ -7,17 +7,18 @@ import {
     StyleSheet,
     TextInput,
     FlatList,
+    TouchableOpacity,
 } from 'react-native'
 import AWS from 'aws-sdk/dist/aws-sdk-react-native'
 // Initialize the Amazon Cognito credentials provider
 AWS.config.region = 'eu-central-1'; // Region
 AWS.config.credentials = new AWS.CognitoIdentityCredentials({
-   
-IdentityPoolId: 'eu-central-1:5fdf8555-d92e-41a9-bc03-39ef64ef11e7',
-})
+    IdentityPoolId: 'eu-central-1:44785595-57cf-4e3c-8b7b-ad75b8fae382',
+});
 
 let lexRunTime = new AWS.LexRuntime()
 let lexUserId = 'mediumBot' + Date.now()
+
 const styles = StyleSheet.create({
     container: {
         flex: 1,
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
         width: '75%'
     },
 userMessages: {
-        backgroundColor: '#40AD4D',
+        backgroundColor: '#4287f5',
         color: 'white',
         padding: 10,
         marginBottom: 10,
@@ -100,7 +101,7 @@ export default class App extends Component {
     sendToLex(message) {
         let params = {
             botAlias: '$LATEST',
-            botName: 'NC_Bot_App',
+            botName: 'NonConformity',
             inputText: message,
             userId: lexUserId,
         }
@@ -139,7 +140,11 @@ renderTextItem(item) {
         )
     }
 render(){
+      
+    let types =['A','B','C']
+    let typeList = types.map(types => <li>{types}</li>)
         return(
+ 
             <View style={styles.container}>
                 <View style={styles.messages}>
                     <FlatList 
@@ -148,20 +153,27 @@ render(){
                         keyExtractor={(item, index) => index}
                         extraData={this.state.messages}
                     />
+                        <TouchableOpacity onPress ={({ item }) =>  this.renderTextItem(item)}>
+                         <Text>{this.typeList}</Text>
+                            
+                        </TouchableOpacity>
+            
                 </View>
+            
                 <View style={styles.inputContainer}>
                     <TextInput
                         onChangeText={(text) => this.setState({userInput: text})}
                         value={this.state.userInput}
                         style={styles.textInput}
                         editable={this.state.inputEnabled}
-                        placeholder={'Type here to talk!'}
+                        placeholder={'Reply to non conformity bot!'}
                         autoFocus={true}
                         onSubmitEditing={this.handleTextSubmit.bind(this)}
                     />
                 </View>
             </View>
-)
+            
+        )
     }
 }
 
