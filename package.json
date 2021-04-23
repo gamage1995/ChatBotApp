@@ -7,7 +7,8 @@
     "ios": "react-native run-ios",
     "start": "react-native start",
     "test": "jest",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "start-max": "node --max-old-space-size=8192 node_modules/react-native/local-cli/cli.js start"
   },
   "dependencies": {
     "aws-sdk": "^2.879.0",
