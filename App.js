@@ -7,6 +7,8 @@ import {
   TextInput,
   FlatList,
   TouchableOpacity,
+  Image,
+  Dimensions,
 } from "react-native";
 import AWS from "aws-sdk/dist/aws-sdk-react-native";
 // Initialize the Amazon Cognito credentials provider
@@ -18,6 +20,7 @@ AWS.config.credentials = new AWS.CognitoIdentityCredentials({
 let lexRunTime = new AWS.LexRuntime();
 let lexUserId = "mediumBot" + Date.now();
 
+const windowWidth = Dimensions.get("window").width;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -33,12 +36,12 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 0,
     borderBottomRightRadius: 20,
     borderTopLeftRadius: 20,
-    marginBottom: 0,
     borderTopRightRadius: 20,
+    marginBottom: 0,
     alignSelf: "flex-start",
     bottom: 23,
     textAlign: "left",
-    width: "75%",
+    width: windowWidth * 0.75,
   },
   userMessages: {
     backgroundColor: "#4287f5",
@@ -50,7 +53,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 0,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    width: "65%",
+    width: windowWidth * 0.65,
     alignSelf: "flex-end",
     textAlign: "left",
   },
@@ -59,9 +62,9 @@ const styles = StyleSheet.create({
     paddingLeft: 15,
   },
   responseContainer: {
-    flexDirection: "row",
+    flexDirection: "column",
     marginTop: 20,
-    marginBottom: 0,
+    marginBottom: 20,
   },
   inputContainer: {
     flexDirection: "row",
@@ -70,23 +73,44 @@ const styles = StyleSheet.create({
   suggestionWrapper: {
     display: "flex",
     flexDirection: "row",
-    justifyContent : 'flex-end',
-    paddingBottom : 10,
-    paddingTop : 10
+    justifyContent: "flex-end",
+    paddingBottom: 10,
+    paddingTop: 10,
   },
   suggestion: {
     backgroundColor: "#228B22",
-    paddingLeft : 20,
-    paddingRight : 20,
-    paddingTop : 10,
-    paddingBottom : 10,
-    borderRadius : 10,
-    marginRight : 10
+    paddingLeft: 20,
+    paddingRight: 20,
+    paddingTop: 10,
+    paddingBottom: 10,
+    borderRadius: 10,
+    marginRight: 10,
   },
-  suggestionText : {
-    fontWeight : '500',
-    color : '#ffffff'
-  }
+  suggestionText: {
+    fontWeight: "500",
+    color: "#ffffff",
+  },
+  responseCard: {
+    width: windowWidth * 0.75,
+    backgroundColor: "white",
+    flexDirection: "column",
+    padding: windowWidth * 0.05,
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 20,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+  },
+  reponseCardImage: {
+    resizeMode: "contain",
+    aspectRatio: 1,
+    flex: 1,
+  },
+  responseCardButton: {
+    backgroundColor: "#4287f5",
+    padding: 15,
+    borderRadius: 10,
+    marginTop: 20,
+  },
 });
 export default class App extends Component {
   constructor(props) {
@@ -95,7 +119,7 @@ export default class App extends Component {
       userInput: "",
       messages: [],
       inputEnabled: true,
-      suggestedMessages: ["Hi", "Janith", "Ravindu"],
+      suggestedMessages: ["Hi", "Janith", "Tell me about the application"],
     };
   }
   // Sends Text to the lex runtime
@@ -133,9 +157,10 @@ export default class App extends Component {
     });
   }
   showResponse(lexResponse) {
-    let lexMessage = lexResponse.message;
+    let msg = lexResponse.message;
+    let responseCard = lexResponse.responseCard;
     let oldMessages = Object.assign([], this.state.messages);
-    oldMessages.push({ from: "bot", msg: lexMessage });
+    oldMessages.push({ from: "bot", msg, responseCard });
     this.setState({
       messages: oldMessages,
       inputEnabled: true,
@@ -153,6 +178,34 @@ export default class App extends Component {
     return (
       <View style={responseStyle}>
         <Text style={style}>{item.msg}</Text>
+        {item.responseCard &&
+          item.responseCard.genericAttachments.map((attachment, index) => {
+            return (
+              <View style={styles.responseCard} key={index}>
+                <Image
+                  style={styles.reponseCardImage}
+                  source={{
+                    uri: attachment.imageUrl,
+                  }}
+                />
+                {attachment.buttons.map(
+                  (button, index) => {
+                    return (
+                      <TouchableOpacity
+                        style={styles.responseCardButton}
+                        key={index}
+                        onPress={() => this.showRequest(button.value)}
+                      >
+                        <Text
+                          style={styles.suggestionText}
+                        >{` ${button.text} `}</Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                )}
+              </View>
+            );
+          })}
       </View>
     );
   }
@@ -166,15 +219,16 @@ export default class App extends Component {
             keyExtractor={(item, index) => index}
             extraData={this.state.messages}
           />
-          <TouchableOpacity onPress={({ item }) => this.renderTextItem(item)}>
-            <Text>{this.typeList}</Text>
-          </TouchableOpacity>
         </View>
 
         <View style={styles.suggestionWrapper}>
           {this.state.suggestedMessages.map((message, index) => {
             return (
-              <TouchableOpacity style={styles.suggestion} key={index}  onPress={() => this.showRequest(message)}>
+              <TouchableOpacity
+                style={styles.suggestion}
+                key={index}
+                onPress={() => this.showRequest(message)}
+              >
                 <Text style={styles.suggestionText}>{` ${message} `}</Text>
               </TouchableOpacity>
             );
